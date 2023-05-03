@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 class GreetingController(val greetingsService: GreetingsService) {
     @GetMapping("/{name}")
     fun retrieveGreeting(@PathVariable("name") name: String): String {
-        return greetingsService.retriveGreetings(name)
+        return greetingsService.retrieveGreetings(name)
     }
 
 }
