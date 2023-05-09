@@ -1,7 +1,11 @@
-package controller
+package com.kotlinspring.controller
 
 import com.kotlinspring.dto.CourseDto
+import com.kotlinspring.repository.CourseRepository
+import com.kotlinspring.util.courseEntityList
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
@@ -16,6 +20,17 @@ internal class CourseControllerIntgTest {
 
     @Autowired
     lateinit var webTestClient: WebTestClient
+
+    @Autowired
+    lateinit var courseRepository: CourseRepository
+
+    @BeforeEach
+    fun setUp() {
+        courseRepository.deleteAll()
+        val courses = courseEntityList()
+        courseRepository.saveAll(courses)
+
+    }
 
     @Test
     fun addCourse() {
@@ -37,5 +52,19 @@ internal class CourseControllerIntgTest {
         assertTrue {
             savedCurseDto!!.id != null
         }
+    }
+
+    @Test
+    fun getAllCourses() {
+        val courseDtos = webTestClient
+            .get()
+            .uri("/v1/courses")
+            .exchange()
+            .expectStatus().isOk
+            .expectBodyList(CourseDto::class.java)
+            .returnResult()
+            .responseBody
+        println("coureses: $courseDtos")
+        assertEquals(3, courseDtos!!.size)
     }
 }
