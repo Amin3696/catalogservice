@@ -36,8 +36,21 @@ class CourseService(val courseRepository: CourseRepository) {
                     it.name = courseDto.name
                     it.category = courseDto.category
                     courseRepository.save(it)
+                    logger.info { "course is updated: $it" }
                     CourseDto(it.id, it.name, it.category)
                 }
+        } else {
+            throw CourseNotFoundException("no course found with given id: $courseId")
+        }
+    }
+
+    fun deleteCourse(courseId: Int) {
+        val courseToDelete = courseRepository.findById(courseId)
+
+        if (courseToDelete.isPresent) {
+            courseRepository.deleteById(courseId)
+            logger.info { "course with courseId $courseId is delete!" }
+
         } else {
             throw CourseNotFoundException("no course found with given id: $courseId")
         }
