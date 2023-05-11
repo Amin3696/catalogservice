@@ -49,6 +49,23 @@ class CourseControllerUnitTest {
             savedCourseDTO!!.id != null
         }
     }
+    @Test
+    fun addCourse_validation() {
+        //given
+        val courseDTO = courseDTO(null, "", "")
+
+        every { courseServiceMock.addCourse(courseDTO) } returns courseDTO(id = 1)
+
+        //when
+        val savedCourseDTO = webTestClient
+            .post()
+            .uri("/v1/courses")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(courseDTO)
+            .exchange()
+            .expectStatus().isBadRequest
+
+    }
 
     @Test
     fun getAllCourses() {
