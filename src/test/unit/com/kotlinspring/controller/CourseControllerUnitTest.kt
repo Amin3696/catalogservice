@@ -5,6 +5,7 @@ import com.kotlinspring.entity.Course
 import com.kotlinspring.service.CourseService
 import io.mockk.every
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
@@ -13,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import util.courseDTO
 import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.expectBody
 
 
 @WebMvcTest(CourseController::class)
@@ -49,28 +51,58 @@ class CourseControllerUnitTest {
             savedCourseDTO!!.id != null
         }
     }
+
     @Test
     fun addCourse_validation() {
         //given
         val courseDTO = courseDTO(null, "", "")
 
-        every { courseServiceMock.addCourse(courseDTO) } returns courseDTO(id = 1)
+        every { courseServiceMock.addCourse(any()) } returns courseDTO(id = 1)
 
         //when
-        val savedCourseDTO = webTestClient
+        val response = webTestClient
             .post()
             .uri("/v1/courses")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(courseDTO)
             .exchange()
             .expectStatus().isBadRequest
+            .expectBody(String::class.java)
+            .returnResult()
+            .responseBody
 
+        assertEquals("courseDTO.category must not be blank, courseDTO.name must not be blank", response)
+    }
+
+    @Test
+    fun addCourse_runtimeException() {
+        //given
+        val courseDto = CourseDto(
+            null, "Build Restfull Api using springboot and kotlin",
+            "dev"
+        )
+        val errorMessage = "Unexpected Error occurred"
+        every { courseServiceMock.addCourse(any()) } throws RuntimeException()
+
+        //when
+        val response = webTestClient
+            .post()
+            .uri("/v1/courses")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(courseDto)
+            .exchange()
+            .expectStatus().is5xxServerError
+            .expectBody(String::class.java)
+            .returnResult()
+            .responseBody
+
+        assertEquals("Unexpected Error occurred", response)
     }
 
     @Test
     fun getAllCourses() {
         every { courseServiceMock.getAllCoursed() }.returnsMany(
-            listOf(courseDTO(id = 1), courseDTO(id = 2, name = "course2"))
+            listOf(courseDTO( 1,"testName","testCategory"), courseDTO( 2, "course2","testCategory"))
         )
         val courseDtos = webTestClient
             .get()
@@ -81,7 +113,7 @@ class CourseControllerUnitTest {
             .returnResult()
             .responseBody
         println("coureses: $courseDtos")
-        Assertions.assertEquals(2, courseDtos!!.size)
+        assertEquals(2, courseDtos!!.size)
     }
 
     @Test
@@ -107,6 +139,6 @@ class CourseControllerUnitTest {
             .returnResult()
             .responseBody
 
-        Assertions.assertEquals("Build Restfull Api using springboot and kotlin-part 1", updatedCurse!!.name)
+        assertEquals("Build Restfull Api using springboot and kotlin-part 1", updatedCurse!!.name)
     }
 }
