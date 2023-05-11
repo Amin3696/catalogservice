@@ -32,6 +32,8 @@ dependencies {
     //runtimeOnly("com.h2database:h2")
     runtimeOnly("org.postgresql:postgresql")
 
+    testImplementation("io.mockk:mockk:1.10.4")
+    testImplementation("com.ninja-squad:springmockk:3.0.1")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webflux")
 
