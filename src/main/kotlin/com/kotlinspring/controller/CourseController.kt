@@ -4,6 +4,7 @@ import com.kotlinspring.dto.CourseDto
 import com.kotlinspring.service.CourseService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -12,6 +13,7 @@ class CourseController(val courseService: CourseService) {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Validated
     fun addCourse(@RequestBody @Valid courseDto: CourseDto): CourseDto {
         return courseService.addCourse(courseDto)
     }

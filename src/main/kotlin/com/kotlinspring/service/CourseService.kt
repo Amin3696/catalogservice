@@ -3,27 +3,32 @@ package com.kotlinspring.service
 import com.kotlinspring.dto.CourseDto
 import com.kotlinspring.entity.Course
 import com.kotlinspring.exception.CourseNotFoundException
+import com.kotlinspring.exception.InstructorNotValidException
 import com.kotlinspring.repository.CourseRepository
 import mu.KLogging
 import org.springframework.stereotype.Service
 
 @Service
-class CourseService(val courseRepository: CourseRepository) {
+class CourseService(val courseRepository: CourseRepository, val instructorService: InstructorService) {
     companion object : KLogging()
 
     fun addCourse(courseDto: CourseDto): CourseDto {
-        val courseEntity = courseDto.let { Course(null, it.name, it.category) }
+        val instructor = instructorService.findInstructorById(courseDto.instructorId!!)
+        if (!instructor.isPresent) {
+            throw InstructorNotValidException("Instructor id is not valid!")
+        }
+        val course = courseDto.let { Course(null, it.name, it.category, instructor.get()) }
 
-        courseRepository.save(courseEntity)
-        logger.info { "course is saved: $courseEntity" }
+        courseRepository.save(course)
+        logger.info { "course is saved: $course" }
 
-        return courseEntity.let { CourseDto(it.id, it.name, it.category) }
+        return course.let { CourseDto(it.id, it.name, it.category, it.instructor?.id) }
 
     }
 
     fun getAllCoursed(): List<CourseDto> {
         return courseRepository.findAll()
-            .map { CourseDto(it.id, it.name, it.category) }
+            .map { CourseDto(it.id, it.name, it.category, it.instructor?.id) }
     }
 
     fun updateCourse(courseId: Int, courseDto: CourseDto): CourseDto {
@@ -37,7 +42,7 @@ class CourseService(val courseRepository: CourseRepository) {
                     it.category = courseDto.category
                     courseRepository.save(it)
                     logger.info { "course is updated: $it" }
-                    CourseDto(it.id, it.name, it.category)
+                    CourseDto(it.id, it.name, it.category, it.instructor?.id)
                 }
         } else {
             throw CourseNotFoundException("no course found with given id: $courseId")
